@@ -2,12 +2,12 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Todo App</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-    integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
   <style>
     body {
       background: rgb(132, 222, 68);
@@ -30,7 +30,8 @@
     #task-container {
       max-width: 600px;
       margin: 0 auto;
-      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25),
+        0 10px 10px rgba(0, 0, 0, 0.22);
       background-color: #fff;
       margin-top: 100px;
       margin-bottom: 100px;
@@ -80,17 +81,88 @@
       <div id="form-wrapper">
         <form id="form">
           <div class="flex-wrapper">
-            <div style='flex: 6'>
-              <input class="form-control" id="title" type="text" name="title" placeholder="Add your news tasks..." />
+            <div style="flex: 6">
+              <input class="form-control" id="title" type="text" name="title" autocomplete="off"
+                placeholder="Add your news tasks..." />
             </div>
-            <div style='flex: 1'>
+            <div style="flex: 1">
               <input id="submit" class="btn btn-warning" type="submit" value="Add a new task" />
             </div>
           </div>
         </form>
       </div>
+      <div id="list-wrapper"></div>
     </div>
   </div>
+
+  <script>
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        let cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          let cookie = cookies[i].trim();
+          // does this cookie string begin with the name we want?
+          if (cookie.substring(0, name.length + 1) === name + '=') {
+            cookieValue = decodeURIComponent(
+              cookie.substring(name.length + 1)
+            );
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    let csrftoken = getCookie('csrftoken');
+
+    taskList();
+    function taskList() {
+      let wrapper = document.getElementById('list-wrapper');
+      wrapper.innerHTML = '';
+      let url = 'http://127.0.0.1:8000/api/task-list/';
+
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          let list = data;
+          for (let i in list) {
+            let item = `
+          <div id="data-row-${i}" class="task-wrapper flex-wrapper">
+            <div style="flex: 7">
+              <span class="title">${list[i].title}</span>
+            </div>
+            <div style="flex: 1">
+              <button class="btn btn-sm btn-outline-info edit">Edit</button>
+            </div>
+            <div style="flex: 1">
+              <button class="btn btn-sm btn-outline-danger delete">x</button>
+            </div>
+          </div>
+          `;
+            wrapper.innerHTML += item;
+          }
+        });
+    }
+
+    let form = document.getElementById('form-wrapper');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault()
+      console.log('Form submitted');
+      let url = 'http://127.0.0.1:8000/api/task-create/'
+      let title = document.getElementById('title').value
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify({ 'title': title }),
+      }).then(function (response) {
+        taskList()
+        document.getElementById('form').reset()
+      })
+    })
+  </script>
 </body>
 
 </html>
